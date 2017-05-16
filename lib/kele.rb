@@ -6,6 +6,14 @@ class Kele
 
   def get_me
     response = self.class.get("/users/me", { "headers": { "authorization" => @auth_token }})
+    me = JSON.parse(response.body)
+    @mentor_id = me["current_enrollment"]["mentor_id"]
+    me
+  end
+
+  def get_mentor_availability
+    raise 'mentor ID required' if @mentor_id.nil?
+    response = self.class.get("/mentors/#{@mentor_id}/student_availability", { "headers": { "authorization" => @auth_token }})
     JSON.parse(response.body)
   end
 
@@ -23,5 +31,6 @@ class Kele
       raise response.message or 'Connection failed' unless response.code == 200
 
       @auth_token = response.parsed_response["auth_token"]
+      get_me
     end
 end
