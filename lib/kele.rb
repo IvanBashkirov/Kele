@@ -1,19 +1,24 @@
 class Kele
   require 'httparty'
   require 'json'
+  require './lib/roadmap'
+  include Roadmap
   include HTTParty
 
 
   def get_me
-    response = self.class.get("/users/me", { "headers": { "authorization" => @auth_token }})
+    headers = {"authorization" => @auth_token}
+    response = self.class.get("/users/me", { "headers": headers})
     me = JSON.parse(response.body)
     @mentor_id = me["current_enrollment"]["mentor_id"]
+    @roadmap_id = me["current_enrollment"]["roadmap_id"]
     me
   end
 
   def get_mentor_availability
     raise 'mentor ID required' if @mentor_id.nil?
-    response = self.class.get("/mentors/#{@mentor_id}/student_availability", { "headers": { "authorization" => @auth_token }})
+    headers = {"authorization" => @auth_token}
+    response = self.class.get("/mentors/#{@mentor_id}/student_availability", { "headers": headers})
     JSON.parse(response.body)
   end
 
