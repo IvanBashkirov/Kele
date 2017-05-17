@@ -6,21 +6,36 @@ class Kele
   include HTTParty
 
 
-  def get_me
-    headers = {"authorization" => @auth_token}
-    response = self.class.get("/users/me", { "headers": headers})
-    me = JSON.parse(response.body)
-    @mentor_id = me["current_enrollment"]["mentor_id"]
-    @roadmap_id = me["current_enrollment"]["roadmap_id"]
-    me
-  end
-
   def get_mentor_availability
-    raise 'mentor ID required' if @mentor_id.nil?
+    mentor_id = get_me["current_enrollment"]["mentor_id"]
+    raise 'mentor ID required' if mentor_id.nil?
     headers = {"authorization" => @auth_token}
-    response = self.class.get("/mentors/#{@mentor_id}/student_availability", { "headers": headers})
+    response = self.class.get("/mentors/#{mentor_id}/student_availability", { "headers": headers})
     JSON.parse(response.body)
   end
+
+  def get_messages(page=1)
+    headers = {"authorization" => @auth_token}
+    body = {"page" => page}
+    response = self.class.get("/message_threads", {"headers": headers, "body": body})
+    page = JSON.parse(response.body)
+    messages = page["items"]
+  end
+
+  def create_message(sender: get_me["email"], recipient_id:, token: nil, stripped_text:, subject: "No Subject")
+    headers = {"authorization" => @auth_token}
+    body = {
+      "sender" => sender,
+      "recipient_id" => recipient_id,
+      "subject" => subject,
+      "stripped-text" => stripped_text
+    }
+    body["token"] = token unless token.nil?
+    puts body
+    response = self.class.post("/messages", {headers: headers, body: body})
+  end
+
+
 
   def initialize(email, password)
       @base_uri = "https://www.bloc.io/api/v1"
@@ -36,6 +51,5 @@ class Kele
       raise response.message or 'Connection failed' unless response.code == 200
 
       @auth_token = response.parsed_response["auth_token"]
-      get_me
     end
 end

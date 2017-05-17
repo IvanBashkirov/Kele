@@ -1,9 +1,17 @@
 module Roadmap
-  def get_roadmap
-    raise 'Roadmap ID required' if @roadmap_id.nil?
+
+  def get_me
     headers = {"authorization" => @auth_token}
-    body = {"id": @roadmap_id}
-    response = self.class.get("/roadmaps/#{@roadmap_id}", {headers: headers, body: body})
+    response = self.class.get("/users/me", { "headers": headers})
+    JSON.parse(response.body)
+  end
+
+  def get_roadmap
+    roadmap_id = get_me["current_enrollment"]["roadmap_id"]
+    raise 'Roadmap ID required' if roadmap_id.nil?
+    headers = {"authorization" => @auth_token}
+    body = {"id": roadmap_id}
+    response = self.class.get("/roadmaps/#{roadmap_id}", {headers: headers, body: body})
     JSON.parse(response.body)
   end
 
